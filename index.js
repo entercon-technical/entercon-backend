@@ -107,7 +107,7 @@ let data;
 
 mongoose
   .connect(
-    "mongodb+srv://NandhaPG:123@nandha.7qpquh8.mongodb.net/entercon?appName=nandha"
+    "mongodb+srv://techentercon_db_user:NHrmR0yZsgcWNMbx@cluster0.lpvcsca.mongodb.net/?appName=Cluster0"
   )
   .then(() => {
     console.log("Connected to MongoDB");
