@@ -642,6 +642,28 @@ app.get("/get-data", async (req, res) => {
   }
 });
 
+app.get("/get-data-presets", async (req, res) => {
+  try {
+    const db = await entercon.findOne();
+
+    if (!db) {
+      return res.status(404).json({
+        success: false,
+        message: "Database not found",
+      });
+    }
+
+    res.send(db.presets);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
+
 app.get("/", (req, res) => {
   entercon
     .find()
