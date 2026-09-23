@@ -213,6 +213,65 @@ app.get("/delete-preset", async (req, res) => {
   }
 });
 
+app.get("/update-preset", async (req, res) => {
+  try {
+    const index = Number(req.query.i);
+    const db = await entercon.findOne();
+
+    if (!db) {
+      return res.status(404).json({
+        success: false,
+        message: "Database not found",
+      });
+    }
+
+    if (isNaN(index) || index < 0 || index >= db.presets.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid preset index",
+      });
+    }
+
+    let preset;
+
+    try {
+      preset = JSON.parse(req.query.preset);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid preset JSON",
+      });
+    }
+
+    if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
+      return res.status(400).json({
+        success: false,
+        message: "Preset must be an object",
+      });
+    }
+
+    await entercon.updateOne(
+      {},
+      {
+        $set: {
+          [`presets.${index}`]: preset,
+        },
+      }
+    );
+
+    const updatedDb = await entercon.findOne();
+
+    res.send(updatedDb.presets);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
+
 app.get("/add-users", async (req, res) => {
   try {
     const { username, role, password } = req.query;
