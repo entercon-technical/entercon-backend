@@ -101,6 +101,10 @@ const DatabaseSchema = new mongoose.Schema({
     type: [SchoolSchema],
     default: [],
   },
+  presets: {
+    type: [mongoose.Schema.Types.Mixed],
+    default: [],
+  },
 });
 
 let data;
@@ -115,6 +119,99 @@ mongoose
   .catch((err) => console.log("MongoDB connection error:", err));
 
 const entercon = mongoose.model("entercon", DatabaseSchema, "entercon");
+
+app.get("/add-preset", async (req, res) => {
+  try {
+    const db = await entercon.findOne();
+
+    if (!db) {
+      return res.status(404).json({
+        success: false,
+        message: "Database not found",
+      });
+    }
+
+    let preset;
+
+    try {
+      preset = JSON.parse(req.query.preset);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid preset JSON",
+      });
+    }
+
+    if (!preset || typeof preset !== "object" || Array.isArray(preset)) {
+      return res.status(400).json({
+        success: false,
+        message: "Preset must be an object",
+      });
+    }
+
+    await entercon.updateOne(
+      {},
+      {
+        $push: {
+          presets: preset,
+        },
+      }
+    );
+
+    const updatedDb = await entercon.findOne();
+
+    res.send(updatedDb.presets);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
+
+app.get("/delete-preset", async (req, res) => {
+  try {
+    const index = Number(req.query.i);
+    const db = await entercon.findOne();
+
+    if (!db) {
+      return res.status(404).json({
+        success: false,
+        message: "Database not found",
+      });
+    }
+
+    if (isNaN(index) || index < 0 || index >= db.presets.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid preset index",
+      });
+    }
+
+    const presets = JSON.parse(JSON.stringify(db.presets));
+    presets.splice(index, 1);
+
+    await entercon.updateOne(
+      {},
+      {
+        $set: { presets },
+      }
+    );
+
+    const updatedDb = await entercon.findOne();
+
+    res.send(updatedDb.presets);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
 
 app.get("/add-users", async (req, res) => {
   try {
